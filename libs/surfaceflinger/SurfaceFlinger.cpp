@@ -1669,13 +1669,16 @@ status_t SurfaceFlinger::onTransact(
     status_t err = BnSurfaceComposer::onTransact(code, data, reply, flags);
     if (err == UNKNOWN_TRANSACTION || err == PERMISSION_DENIED) {
         CHECK_INTERFACE(ISurfaceComposer, data, reply);
-        if (UNLIKELY(!mHardwareTest.checkCalling())) {
-            IPCThreadState* ipc = IPCThreadState::self();
-            const int pid = ipc->getCallingPid();
-            const int uid = ipc->getCallingUid();
-            LOGE("Permission Denial: "
-                    "can't access SurfaceFlinger pid=%d, uid=%d", pid, uid);
-            return PERMISSION_DENIED;
+        //Skips security check if the requested function involves calibration settings
+        if (code != 1014 && code != 1015 && code != 1016 && code != 1017) {
+            if (UNLIKELY(!mHardwareTest.checkCalling())) {
+                IPCThreadState* ipc = IPCThreadState::self();
+                const int pid = ipc->getCallingPid();
+                const int uid = ipc->getCallingUid();
+                LOGE("Permission Denial: "
+                        "can't access SurfaceFlinger pid=%d, uid=%d", pid, uid);
+                return PERMISSION_DENIED;
+            }
         }
         int n;
         switch (code) {
